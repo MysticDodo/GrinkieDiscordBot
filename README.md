@@ -1,8 +1,9 @@
-# Grinkie Discord Bot #
+# [Grinkie](https://github.com/user-attachments/assets/80ded6f3-2d6c-4c0c-a935-5651069f5ca4) Discord Bot #
+
 A simple music Discord bot.
 - Uses Lavalink
 - Spring boot application
-- Set-up for SoundCloud searching, but other sites that Lavalink uses works, not Youtube
+- Set-up for SoundCloud searching, but other sites that Lavalink uses works, not Youtube!
 
 ## Commands ##
 ### Music
