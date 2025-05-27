@@ -1,10 +1,10 @@
-#**Grinkie Discord Bot**#
+#Grinkie Discord Bot#
 A simple music Discord bot.
 - Uses Lavalink
 - Spring boot application
 - Set-up for SoundCloud searching, but other sites that Lavalink uses works, not Youtube
 
-##**Commands**##
+##Commands##
 #Music
 - join -> makes the bot join the vc
 - play -> makes the bot play a song, either a URL or it searches soundcloud (search gives a playlist at the moment)
