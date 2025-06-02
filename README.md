@@ -3,6 +3,7 @@
 A simple music Discord bot.
 - Uses Lavalink
 - Spring boot application
+- JDA
 - Set-up for SoundCloud searching, but other sites that Lavalink uses works, not Youtube!
 
 ## Commands ##
