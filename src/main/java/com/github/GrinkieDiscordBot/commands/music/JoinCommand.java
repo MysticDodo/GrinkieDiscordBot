@@ -2,11 +2,12 @@ package com.github.GrinkieDiscordBot.commands.music;
 
 import com.github.GrinkieDiscordBot.commands.ICommand;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.exceptions.DetachedEntityException;
 import net.dv8tion.jda.api.managers.AudioManager;
 
 /**
@@ -25,37 +26,51 @@ public class JoinCommand implements ICommand {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-        final Member bot = event.getGuild().getSelfMember(); // Gets the bot instance
-        final GuildVoiceState botVoiceState = bot.getVoiceState(); // Gets the voice state of the bot
-
-
-        if (botVoiceState.inAudioChannel()){ // inAudioChannel can output null if the JDA intents and cache aren't set up correctly.
-            event.reply("I'm already in a voice channel!").queue();
+        // Ensure the command is only used in a server context
+        if (!event.isFromGuild()) {
+            event.reply("This command must be used in a server.").setEphemeral(true).queue();
             return;
         }
 
-        final Member member = event.getMember(); // Gets the user that used command
-        final GuildVoiceState memberVoiceState = member.getVoiceState(); // Gets the voice state of user
+        final Guild guild = event.getGuild();
+        final Member member = event.getMember();
 
-        if (!memberVoiceState.inAudioChannel()){ // inAudioChannel can output null if the JDA intents and cache aren't set up correctly.
-            event.reply("You are not in a channel!").queue();
+        if (guild == null || member == null) {
+            event.reply("Couldn't resolve server or member.").setEphemeral(true).queue();
             return;
         }
 
+        try {
+            final Member bot = guild.getSelfMember(); // Gets the bot instance
+            final GuildVoiceState botVoiceState = bot.getVoiceState(); // Gets the voice state of the bot
+            final GuildVoiceState memberVoiceState = member.getVoiceState(); // Gets the voice state of user
 
-        final AudioManager audioManager = event.getGuild().getAudioManager(); // Gets the audio manager
-        final VoiceChannel voiceChannel = memberVoiceState.getChannel().asVoiceChannel(); // Gets the voice channel the user is in
+            // If bot is already in a voice channel, do not join another
+            if (botVoiceState != null && botVoiceState.inAudioChannel()) {
+                event.reply("I'm already in a voice channel!").queue();
+                return;
+            }
 
-        if(bot.hasPermission(Permission.VOICE_CONNECT)) // Checks if bot has permission to connect to voice
-        {
-            audioManager.openAudioConnection(voiceChannel); // Opens an audio connection to the channel
-            event.replyFormat("Connecting to \uD83D\uDD0A %s", voiceChannel.getName()).queue();
+            // If user is not in a voice channel, abort
+            if (memberVoiceState == null || !memberVoiceState.inAudioChannel()) {
+                event.reply("You are not in a channel!").queue();
+                return;
+            }
+
+            final AudioManager audioManager = guild.getAudioManager(); // Gets the audio manager
+            final VoiceChannel voiceChannel = memberVoiceState.getChannel().asVoiceChannel(); // Gets the voice channel the user is in
+
+            // If the bot has permission to connect to the voice channel, join
+            if (bot.hasPermission(voiceChannel, Permission.VOICE_CONNECT)) {
+                audioManager.openAudioConnection(voiceChannel); // Opens an audio connection to the channel
+                event.replyFormat("Connecting to \uD83D\uDD0A %s", voiceChannel.getName()).queue();
+            } else {
+                event.reply("I do not have voice channel joining permissions!").queue();
+            }
+        } catch (DetachedEntityException e) {
+            // This can happen if the bot tries to access a server it's not properly cached in
+            event.reply("I'm unable to join this server. Please check my permissions and make sure I'm added correctly.").setEphemeral(true).queue();
+            e.printStackTrace();
         }
-        else {
-            event.reply("I do not have voice channel joining permissions!").queue();
-        }
-
-
-
     }
 }

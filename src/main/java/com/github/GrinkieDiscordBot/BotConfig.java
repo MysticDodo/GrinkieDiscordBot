@@ -6,6 +6,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,8 +34,16 @@ public class BotConfig {
     {
         try {
             JDA jda = JDABuilder.createDefault(token)
-                    .enableIntents(EnumSet.allOf(GatewayIntent.class)) // Enables all the 'permissions' of the bot
-                    .addEventListeners(new CommandListener()) // Provides it with the event listener that handles the commands
+                    .enableIntents(EnumSet.of(
+                            GatewayIntent.GUILD_MESSAGES,
+                            GatewayIntent.GUILD_MEMBERS,
+                            GatewayIntent.GUILD_VOICE_STATES,
+                            GatewayIntent.GUILD_PRESENCES,
+                            GatewayIntent.MESSAGE_CONTENT
+                    )) // Only enable the required intents — allOf can be risky
+                    .setMemberCachePolicy(MemberCachePolicy.ALL) // Caches all members
+                    .enableCache(CacheFlag.VOICE_STATE) // Caches voice state
+                    .addEventListeners(new CommandListener()) // Your command handler
                     .build();
 
             jda.awaitReady();
